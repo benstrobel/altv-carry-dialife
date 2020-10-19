@@ -1,13 +1,15 @@
 import * as alt from 'alt';
 import * as game from 'natives';
 
+game.requestAnimDict("nm");
+game.requestAnimDict("missfinale_c2mcs_1");
+
 alt.on('keydown', (key) => {
     if (key === "Z".charCodeAt(0)) {    // TODO 
         if(carrying){
-            carrying = false;
+            initReleaseCarried();
         }else{
             initCarryNearestDeadPlayer();
-            carrying = true;
         }
         
     }
@@ -50,6 +52,7 @@ function doCarryNearestDeadPlayer(playerID, targetID){
     game.requestAnimDict("missfinale_c2mcs_1");
     game.taskPlayAnim(player.scriptID, "missfinale_c2mcs_1", "fin_c2_mcs_1_camman", 8.0, 8.0, 600000, 50, 1.0, 0, 0, 0);
     game.attachEntityToEntity(target.scriptID, player.scriptID, 0, 0.25, 0.2, 0.6, 0, 0, 0, false, false, true, 0, true);
+    carrying = true;
 }
 
 function doGetCarriedByPlayer(carrierID){
@@ -63,6 +66,7 @@ function doGetCarriedByPlayer(carrierID){
 function releaseCarried(target){
     game.stopAnimTask(alt.Player.local.scriptID, "missfinale_c2mcs_1", "nm", 1);
     game.detachEntity(target.scriptID, true, false);
+    carrying = false;
 }
 
 function releaseMe(){

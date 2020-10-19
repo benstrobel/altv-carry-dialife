@@ -12,9 +12,10 @@ alt.onClient("Server:Carry:ReleasePlayer", (player) => {
 
 function carryPlayer(player, targetID){
     if(player.health <= 100){return;}
+    if(getValuesOfDict(carrying).indexOf(player) != -1){return;}
+    if(carrying[player.id] != undefined){return;}
     const target = alt.Player.getByID(targetID);
     if(target == null){return;}
-    if(carrying[player.id] != undefined){return;}
     if(true){// target.health <= 100){
         alt.emitClient(player, "Client:Carry:CarryPlayer", player.id, targetID);
         alt.emitClient(target, "Client:Carry:GetCarried", player.id);
@@ -30,4 +31,10 @@ function releasePlayer(player){
     delete carrying[player.id];
     if(target == null){return;}
     alt.emitClient(target, "Client:Carry:GetReleased");
+}
+
+function getValuesOfDict(dict){
+    return Object.keys(dict).map((key) => {
+        return dict[key];
+    });
 }
