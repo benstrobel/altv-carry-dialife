@@ -2,15 +2,7 @@ import * as alt from 'alt';
 import * as game from 'natives';
 
 alt.on('keydown', (key) => {
-    if (key === "X".charCodeAt(0)) { 
-        const model = 1413662315;
-        if (!game.hasModelLoaded(model)){
-            game.requestModel(model);
-        }
-        gamePed = game.createPed(1, model, alt.Player.local.pos.x, alt.Player.local.pos.y, alt.Player.local.pos.z, 0.0, false, false);
-        alt.log(gamePed)
-    }
-    if (key === "Z".charCodeAt(0)) {
+    if (key === "Z".charCodeAt(0)) {    // TODO 
         if(carrying){
             carrying = false;
         }else{
