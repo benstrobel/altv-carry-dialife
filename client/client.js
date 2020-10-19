@@ -15,6 +15,7 @@ alt.on('keydown', (key) => {
             carrying = false;
         }else{
             initCarryNearestDeadPlayer();
+            carrying = true;
         }
         
     }
@@ -28,10 +29,17 @@ alt.onServer("Client:Carry:GetCarried", (carrierID) => {
     doGetCarriedByPlayer(carrierID);
 });
 
+alt.onServer("Client:Carry:ReleasePlayer", (carriedID) => {
+    releaseCarried(carriedID);
+});
+
+alt.onServer("Client:Carry:GetReleased", () => {
+    releaseMe();
+});
+
 var carrying = false;
 
 function initCarryNearestDeadPlayer(){
-    alt.log("test0")
     const player = alt.Player.local;
     if(player == null){return;}
     const nearestPlayer = getNearestOtherPlayer(player, 3);
@@ -39,15 +47,17 @@ function initCarryNearestDeadPlayer(){
     alt.emitServer("Server:Carry:CarryPlayer", nearestPlayer.id);
 }
 
+function initReleaseCarried(){
+    alt.emitServer("Server:Carry:ReleasePlayer");
+}
+
 function doCarryNearestDeadPlayer(playerID, targetID){
-    alt.log("test")
     const player = alt.Player.getByID(playerID);
     const target = alt.Player.getByID(targetID);
     if(player == null || target == null){return;}
     game.requestAnimDict("missfinale_c2mcs_1");
     game.taskPlayAnim(player.scriptID, "missfinale_c2mcs_1", "fin_c2_mcs_1_camman", 8.0, 8.0, 600000, 50, 1.0, 0, 0, 0);
     game.attachEntityToEntity(target.scriptID, player.scriptID, 0, 0.25, 0.2, 0.6, 0, 0, 0, false, false, true, 0, true);
-    alt.log("test2")
 }
 
 function doGetCarriedByPlayer(carrierID){
@@ -56,12 +66,15 @@ function doGetCarriedByPlayer(carrierID){
     game.requestAnimDict("nm");
     game.taskPlayAnim(target.scriptID, "nm", "firemans_carry", 8.0, 8.0, 600000, 1, 1.0, 0, 0, 0);
     game.attachEntityToEntity(target.scriptID, player.scriptID, 0, 0.25, 0.2, 0.6, 0, 0, 0, false, false, true, 0, true);
-    alt.log("test2")
 }
 
-function releaseCarriedPlayer(player,target){
+function releaseCarried(target){
+    game.stopAnimTask(alt.Player.local.scriptID, "missfinale_c2mcs_1", "nm", 1);
+    game.detachEntity(target.scriptID, true, false);
+}
 
-    game.stopAnimTask(player.scriptID, "missfinale_c2mcs_1", "nm", 1);
+function releaseMe(){
+    const target = alt.Player.local;
     game.stopAnimTask(target.scriptID, "fin_c2_mcs_1_camma", "firemans_carry", 1);
     game.detachEntity(target.scriptID, true, false);
 }
