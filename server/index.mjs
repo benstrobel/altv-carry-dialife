@@ -6,6 +6,10 @@ alt.onClient("Server:Carry:CarryPlayer", (player, targetID) => {
     carryPlayer(player,targetID);
 })
 
+alt.onClient("Server:Carry:CarryPlayer:Arrested", (player, targetID) => {
+    carryPlayerArrested(player,targetID);
+})
+
 alt.onClient("Server:Carry:ReleasePlayer", (player) => {
     releasePlayer(player);
 })
@@ -16,11 +20,19 @@ function carryPlayer(player, targetID){
     if(carrying[player.id] != undefined){return;}
     const target = alt.Player.getByID(targetID);
     if(target == null){return;}
-    if(true){// target.health <= 100){
-        alt.emitClient(player, "Client:Carry:CarryPlayer", player.id, targetID);
-        alt.emitClient(target, "Client:Carry:GetCarried", player.id);
-        carrying[player.id, targetID];
-    } 
+    alt.emitClient(player, "Client:Carry:CarryPlayer", player.id, targetID);
+    alt.emitClient(target, "Client:Carry:GetCarried", player.id);
+    carrying[player.id, targetID];
+}
+
+function carryPlayerArrested(player, targetID){
+    if(getValuesOfDict(carrying).indexOf(player) != -1){return;}
+    if(carrying[player.id] != undefined){return;}
+    const target = alt.Player.getByID(targetID);
+    if(target == null){return;}
+    alt.emitClient(player, "Client:Carry:CarryPlayerArrested", player.id, targetID);
+    alt.emitClient(target, "Client:Carry:GetCarriedArrested", player.id);
+    carrying[player.id, targetID];
 }
 
 function releasePlayer(player){

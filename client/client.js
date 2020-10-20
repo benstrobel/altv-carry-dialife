@@ -15,12 +15,49 @@ alt.on('keydown', (key) => {
     }
 });
 
+// ------------------  External Functionality -------------------
+
+alt.onServer("Client:Carry:InitAction", (carryType) => {
+    if(carrying){
+        initReleaseCarried();
+        return;
+    }
+    if(carryType == "Dead"){
+        initCarryNearestDeadPlayer();
+    }
+    if(carryType == "Arrested"){
+        initCarryNearestArrestedPlayer();
+    }
+})
+
+alt.onServer("Client:Carry:InitCarryDead", () => {
+    initCarryNearestDeadPlayer();
+})
+
+alt.onServer("Client:Carry:InitCarryArrested", () => {
+    initCarryNearestArrestedPlayer();
+})
+
+alt.onServer("Client:Carry:InitRelease", () => {
+    initReleaseCarried();
+})
+
+// ------------------  Internal Functionality -------------------
+
 alt.onServer("Client:Carry:CarryPlayer", (playerID, targetID) => {
-    doCarryNearestDeadPlayer(playerID, targetID, true);
+    doCarryNearestDeadPlayer(playerID, targetID);
+});
+
+alt.onServer("Client:Carry:CarryPlayerArrested", (playerID, targetID) => {
+    doCarryNearestArrestedPlayer(playerID, targetID);
 });
 
 alt.onServer("Client:Carry:GetCarried", (carrierID) => {
     doGetCarriedByPlayer(carrierID);
+});
+
+alt.onServer("Client:Carry:GetCarriedArrested", (carrierID) => {
+    doGetCarriedArrestedByPlayer(carrierID);
 });
 
 alt.onServer("Client:Carry:ReleasePlayer", (carriedID) => {
@@ -41,6 +78,14 @@ function initCarryNearestDeadPlayer(){
     alt.emitServer("Server:Carry:CarryPlayer", nearestPlayer.id);
 }
 
+function initCarryNearestArrestedPlayer(){
+    const player = alt.Player.local;
+    if(player == null){return;}
+    const nearestPlayer = getNearestOtherPlayer(player, 3);
+    if(nearestPlayer == null){return;}
+    alt.emitServer("Server:Carry:CarryPlayer:Arrested", nearestPlayer.id);
+}
+
 function initReleaseCarried(){
     alt.emitServer("Server:Carry:ReleasePlayer");
 }
@@ -55,11 +100,25 @@ function doCarryNearestDeadPlayer(playerID, targetID){
     carrying = true;
 }
 
+function doCarryNearestArrestedPlayer(playerID, targetID){
+    const player = alt.Player.getByID(playerID);
+    const target = alt.Player.getByID(targetID);
+    if(player == null || target == null){return;}
+    game.attachEntityToEntity(target.scriptID, player.scriptID, 0, 0.25, 0.2, 0.6, 0, 0, 0, false, false, true, 0, true);
+    carrying = true;
+}
+
 function doGetCarriedByPlayer(carrierID){
     const player = alt.Player.getByID(carrierID)
     const target = alt.Player.local;
     game.requestAnimDict("nm");
     game.taskPlayAnim(target.scriptID, "nm", "firemans_carry", 8.0, 8.0, 600000, 1, 1.0, 0, 0, 0);
+    game.attachEntityToEntity(target.scriptID, player.scriptID, 0, 0.25, 0.2, 0.6, 0, 0, 0, false, false, true, 0, true);
+}
+
+function doGetCarriedArrestedByPlayer(carriedID){
+    const player = alt.Player.getByID(carrierID)
+    const target = alt.Player.local;
     game.attachEntityToEntity(target.scriptID, player.scriptID, 0, 0.25, 0.2, 0.6, 0, 0, 0, false, false, true, 0, true);
 }
 
