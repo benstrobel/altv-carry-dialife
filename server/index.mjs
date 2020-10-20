@@ -22,7 +22,7 @@ function carryPlayer(player, targetID){
     if(target == null){return;}
     alt.emitClient(player, "Client:Carry:CarryPlayer", player.id, targetID);
     alt.emitClient(target, "Client:Carry:GetCarried", player.id);
-    carrying[player.id, targetID];
+    carrying[player.id] = targetID;
 }
 
 function carryPlayerArrested(player, targetID){
@@ -32,7 +32,7 @@ function carryPlayerArrested(player, targetID){
     if(target == null){return;}
     alt.emitClient(player, "Client:Carry:CarryPlayerArrested", player.id, targetID);
     alt.emitClient(target, "Client:Carry:GetCarriedArrested", player.id);
-    carrying[player.id, targetID];
+    carrying[player.id] = targetID;
 }
 
 function releasePlayer(player){
@@ -50,3 +50,22 @@ function getValuesOfDict(dict){
         return dict[key];
     });
 }
+
+// ------------------------------------- Car Interactions -----------------------------------
+
+alt.onClient("Server:Carry:PulledOutOfCar", (player, targetID, vehicleID, seat) => {
+    const target = alt.Player.getByID(targetID);
+    if(target == null || target == undefined){return;}
+    alt.emitClient(target, "Client:Carry:GetPulledOutOfVehicle"); 
+});
+
+alt.onClient("Server:Carry:PutIntoCar", (player, vehicleID, seat) => {
+    const targetID = carrying[player.id]
+    if(targetID == undefined || targetID == null){return;}
+    const target = alt.Player.getByID(targetID);
+    if(target == undefined || targetID == null){return;}
+    releasePlayer(target);
+    alt.setTmeout(() => {
+      alt.emitClient(target, "Client:Carry:GetPutIntoVehicle", vehicleID, seat);  
+    }, 300);
+});
