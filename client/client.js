@@ -157,6 +157,74 @@ function getNearestOtherPlayer(sourcePlayer, radius){
     return nearestOtherPlayer;
 }
 
+// ------------------------------------- Car Interactions -----------------------------------
+
+function initPullOutOfCar(vehicleID){   // sends targetveh, targetID(not script)
+    const vehicle = alt.Vehicle.getById(vehicleID); // in do: TASK_LEAVE_VEHICLE (16)
+    if(vehicle == null || vehicle.speed*3.6 > 5){return;}
+    const bfrPed = game.getPedInVehicleSeat(vehicle.scriptID, 4);
+    const bflPed = game.getPedInVehicleSeat(vehicle.scriptID, 3);
+    const brPed = game.getPedInVehicleSeat(vehicle.scriptID, 2);
+    const blPed = game.getPedInVehicleSeat(vehicle.scriptID, 1);
+    const frPed = game.getPedInVehicleSeat(vehicle.scriptID, 0);
+    const flPed = game.getPedInVehicleSeat(vehicle.scriptID, -1);
+    if(notInvalidScriptID(bfrPed)){
+        // TODO
+        return;
+    }
+    if(notInvalidScriptID(bflPed)){
+        // TODO
+        return;
+    }
+    if(notInvalidScriptID(brPed)){
+        // TODO
+        return;
+    }
+    if(notInvalidScriptID(blPed)){
+        // TODO
+        return;
+    }
+    if(notInvalidScriptID(frPed)){
+        // TODO
+        return;
+    }
+    if(notInvalidScriptID(flPed)){
+        // TODO
+        return;
+    }
+}
+
+function initPutIntoCar(vehicleID){ // sends targetveh, targetID(not script), seatnr to server
+    const vehicle = alt.Vehicle.getById(vehicleID); // in do: SET_PED_INTO_VEHICLE
+    if(vehicle == null || vehicle.speed*3.6 > 5){return;}
+    const bfrPed = game.getPedInVehicleSeat(vehicle.scriptID, 4);
+    const bflPed = game.getPedInVehicleSeat(vehicle.scriptID, 3);
+    const brPed = game.getPedInVehicleSeat(vehicle.scriptID, 2);
+    const blPed = game.getPedInVehicleSeat(vehicle.scriptID, 1);
+    if(notInvalidScriptID(bfrPed)){
+        // TODO
+        return;
+    }
+    if(notInvalidScriptID(bflPed)){
+        // TODO
+        return;
+    }
+    if(notInvalidScriptID(brPed)){
+        // TODO
+        return;
+    }
+    if(notInvalidScriptID(blPed)){
+        // TODO
+        return;
+    }
+}
+
+function notInvalidScriptID(scriptID){
+    return scriptID != undefined && scriptID != null && scriptID != -1 && scriptID != 0;
+}
+
+// ------------------------------------------ Helper ------------------------------------------
+
 function requestAnimDictPromise(dict,dict2) {
     game.requestAnimDict(dict);
     game.requestAnimDict(dict2);
