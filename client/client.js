@@ -297,6 +297,6 @@ async function isArrested(targetId){
         });
     });
 
-    var result = await promise;
-    return result;
+    // var result = await promise;
+    return promise;
 }
