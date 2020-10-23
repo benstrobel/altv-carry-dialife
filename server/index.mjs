@@ -14,6 +14,14 @@ alt.onClient("Server:Carry:ReleasePlayer", (player) => {
     releasePlayer(player);
 })
 
+alt.onClient("Server:Carry:DistanceTooFar", (player) => {
+    if(getValuesOfDict(carrying).indexOf(player.id) != -1){
+        const carrierID = getKeyByValue(carrying, player.id);
+        releasePlayer(alt.Player.getByID(carrierID));
+        delete carrying[carrierID];
+    }
+});
+
 alt.on("playerDeath", (victim, killer, weaponHash) => {
     const hit0 = carrying[victim.id];
     if(hit0 != undefined && hit0 != null){

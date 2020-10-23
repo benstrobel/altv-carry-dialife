@@ -5,10 +5,20 @@ game.requestAnimDict("nm");
 game.requestAnimDict("missfinale_c2mcs_1");
 
 var carried = false;
+var carriedByScriptID = null;
+var carrying = false;
 
 alt.everyTick(() => {
-    if(carried){
+    if(carried && carriedByScriptID == null){
         game.setEntityCollision(alt.Player.local.scriptID, false, false);
+    }
+    if(carried && carriedByScriptID != null){
+        const target = getForwardFromPed(carriedByScriptID, 1);
+        const dist = distance(target, game.getEntityCoords(alt.Player.local.scriptID));
+        if(dist > 10){alt.emitServer("Server:Carry:DistanceTooFar");}
+        if(dist < 2){return;}
+        const heading = game.getEntityHeading(carriedByScriptID) + 180;
+        game.taskGoStraightToCoord(alt.Player.local.scriptID, target.x, target.y, target.z, 1, -1, heading , 0);
     }
 })
 
@@ -33,7 +43,6 @@ alt.onServer("Client:Carry:InitAction", () => {
     const nearestPlayer = getNearestOtherPlayer(alt.Player.local, 3);
     if(nearestPlayer == null || nearestPlayer == undefined){return;}
     isArrested(nearestPlayer.id).then((status) => {
-        alt.log(`Arrested : ${status}`);
         if(status){
             initCarryNearestArrestedPlayer(nearestPlayer);
         }else{
@@ -42,12 +51,12 @@ alt.onServer("Client:Carry:InitAction", () => {
     }, () => {}).catch(() => {})
 })
 
-alt.onServer("Client:Carry:InitCarryDead", () => {
-    initCarryNearestDeadPlayer();
+alt.onServer("Client:Carry:InitCarryDead", (nearestPlayer) => {
+    initCarryNearestDeadPlayer(nearestPlayer);
 })
 
-alt.onServer("Client:Carry:InitCarryArrested", () => {
-    initCarryNearestArrestedPlayer();
+alt.onServer("Client:Carry:InitCarryArrested", (nearestPlayer) => {
+    initCarryNearestArrestedPlayer(nearestPlayer);
 })
 
 alt.onServer("Client:Carry:InitRelease", () => {
@@ -102,8 +111,6 @@ alt.onServer("Client:Carry:GetReleased", () => {
     releaseMe();
 });
 
-var carrying = false;
-
 function initCarryNearestDeadPlayer(nearestPlayer){
     if(nearestPlayer == null){return;}
     alt.emitServer("Server:Carry:CarryPlayer", nearestPlayer.id);
@@ -135,6 +142,7 @@ function doCarryNearestArrestedPlayer(playerID, targetID){
 function doGetCarriedByPlayer(carrierID){
     const player = alt.Player.getByID(carrierID)
     const target = alt.Player.local;
+    if(player == null){return;}
     carried = true;
     game.requestAnimDict("nm");
     game.taskPlayAnim(target.scriptID, "nm", "firemans_carry", 8.0, 8.0, 600000, 1, 1.0, 0, 0, 0);
@@ -144,8 +152,10 @@ function doGetCarriedByPlayer(carrierID){
 function doGetCarriedArrestedByPlayer(carrierID){
     const player = alt.Player.getByID(carrierID)
     const target = alt.Player.local;
+    if(player == null){return;}
     carried = true;
-    game.attachEntityToEntity(target.scriptID, player.scriptID, game.getPedBoneIndex(player.scriptID, 0), 0.0, 1.0, 0.0, 0, 0, 0, false, false, true, 0, false);
+    carriedByScriptID = player.scriptID;
+    //game.attachEntityToEntity(target.scriptID, player.scriptID, game.getPedBoneIndex(player.scriptID, 11816), 0.0, 1.0, 0.0, 0, 0, 0, false, false, true, 0, false);
 }
 
 function releaseCarried(carriedID){
@@ -158,6 +168,7 @@ function releaseMe(){
     const target = alt.Player.local;
     game.stopAnimTask(target.scriptID, "nm", "firemans_carry", 1);
     game.detachEntity(target.scriptID, true, true);
+    carriedByScriptID = null;
 }
 
 function getNearestOtherPlayer(sourcePlayer, radius){
@@ -245,6 +256,7 @@ function getPutIntoCar(vehicleID, seat){
     const vehicle = alt.Vehicle.getByID(vehicleID);
     if(vehicle == null || vehicle == undefined){return;}
     game.detachEntity(alt.Player.local.scriptID, true, true);
+    carriedByScriptID = null;
     game.setPedIntoVehicle(alt.Player.local.scriptID, vehicle.scriptID, seat);
     frameWorkNotificationFramework(1, 3000, "Du wurdest in das Fahrzeug gesetzt.");
 }
@@ -254,6 +266,17 @@ function notInvalidScriptID(scriptID){
 }
 
 // ------------------------------------------ Helper ------------------------------------------
+
+function getForwardFromPed(pedScriptID, metersforward){
+    const forwardVector = game.getEntityForwardVector(pedScriptID);
+    const pedCoords = game.getEntityCoords(pedScriptID);
+    var result = {
+        x: pedCoords.x + forwardVector.x * metersforward,
+        y: pedCoords.y + forwardVector.y * metersforward,
+        z: pedCoords.z + forwardVector.z * metersforward
+    }
+    return result;
+}
 
 function frameWorkNotificationFramework(typ, duration, msg){
     const type = 1; //1 Info | 2 Success | 3 Warning | 4 Error
@@ -291,12 +314,9 @@ function difference(number0, number1){
 async function isArrested(targetId){
     alt.emitServer("Server:Restrain:IsRestrained", targetId);
 
-    let promise = new Promise((res, rej) => {
+    return promise = new Promise((res, rej) => {
         alt.onServer("Client:Restrain:IsRestrained", (status) => {
             res(status);
         });
     });
-
-    // var result = await promise;
-    return promise;
 }
