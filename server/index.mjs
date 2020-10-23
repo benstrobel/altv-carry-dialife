@@ -14,8 +14,30 @@ alt.onClient("Server:Carry:ReleasePlayer", (player) => {
     releasePlayer(player);
 })
 
+alt.on("playerDeath", (victim, killer, weaponHash) => {
+    const hit0 = carrying[victim.id];
+    if(hit0 != undefined && hit0 != null){
+        releasePlayer(victim);
+        delete carrying[victim.id];
+    }
+    if(getValuesOfDict(carrying).indexOf(victim.id) != -1){
+        const carrierID = getKeyByValue(carrying, victim.id);
+        releasePlayer(alt.Player.getByID(carrierID));
+        delete carrying[carrierID];
+    }
+})
+
+alt.on("playerDisconnect", (player, reason) => {
+    const hit0 = carrying[player.id];
+    if(hit0 != undefined && hit0 != null){
+        releasePlayer(player);
+        delete carrying[player.id];
+    }
+})
+
 function carryPlayer(player, targetID){
-    if(player.health <= 100){return;}
+    if(!player.hasMeta("Client:Carry:IsDead") || !player.getMeta("Client:Carry:IsDead")){return;}
+    // if(player.health <= 100){return;} TODO metacheck
     if(getValuesOfDict(carrying).indexOf(player) != -1){return;}
     if(carrying[player.id] != undefined){return;}
     const target = alt.Player.getByID(targetID);
@@ -43,7 +65,11 @@ function releasePlayer(player){
     delete carrying[player.id];
     if(target == null){return;}
     alt.emitClient(target, "Client:Carry:GetReleased");
+    alt.emitClient(null, "Client:Carry:ResetCollide", targetID);
+    target.pos = new alt.Vector3(target.pos.x,target.pos.y,target.pos.z+1);
 }
+
+// ------------------------------------- Car Interactions -----------------------------------
 
 function getValuesOfDict(dict){
     return Object.keys(dict).map((key) => {
@@ -51,9 +77,11 @@ function getValuesOfDict(dict){
     });
 }
 
-// ------------------------------------- Car Interactions -----------------------------------
+function getKeyByValue(object, value) {
+    return Object.keys(object).find(key => object[key] === value);
+}
 
-alt.onClient("Server:Carry:PulledOutOfCar", (player, targetID, vehicleID, seat) => {
+alt.onClient("Server:Carry:PulledOutOfCar", (player, targetID) => {
     const target = alt.Player.getByID(targetID);
     if(target == null || target == undefined){return;}
     alt.emitClient(target, "Client:Carry:GetPulledOutOfVehicle"); 
@@ -64,8 +92,6 @@ alt.onClient("Server:Carry:PutIntoCar", (player, vehicleID, seat) => {
     if(targetID == undefined || targetID == null){return;}
     const target = alt.Player.getByID(targetID);
     if(target == undefined || targetID == null){return;}
-    releasePlayer(target);
-    alt.setTmeout(() => {
-      alt.emitClient(target, "Client:Carry:GetPutIntoVehicle", vehicleID, seat);  
-    }, 300);
+    releasePlayer(player);
+    alt.emitClient(target, "Client:Carry:GetPutIntoVehicle", vehicleID, seat);  
 });
