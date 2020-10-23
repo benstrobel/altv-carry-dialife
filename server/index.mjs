@@ -33,6 +33,11 @@ alt.on("playerDisconnect", (player, reason) => {
         releasePlayer(player);
         delete carrying[player.id];
     }
+    if(getValuesOfDict(carrying).indexOf(player.id) != -1){
+        const carrierID = getKeyByValue(carrying, player.id);
+        releasePlayer(alt.Player.getByID(carrierID));
+        delete carrying[carrierID];
+    }
 })
 
 function carryPlayer(player, targetID){
