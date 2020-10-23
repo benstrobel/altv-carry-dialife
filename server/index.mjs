@@ -49,8 +49,6 @@ alt.on("playerDisconnect", (player, reason) => {
 })
 
 function carryPlayer(player, targetID){
-    if(!player.hasMeta("Client:Carry:IsDead") || !player.getMeta("Client:Carry:IsDead")){return;}
-    // if(player.health <= 100){return;} TODO metacheck
     if(getValuesOfDict(carrying).indexOf(player) != -1){return;}
     if(carrying[player.id] != undefined){return;}
     const target = alt.Player.getByID(targetID);
@@ -100,8 +98,9 @@ alt.onClient("Server:Carry:PulledOutOfCar", (player, targetID) => {
     alt.emitClient(target, "Client:Carry:GetPulledOutOfVehicle"); 
 });
 
-alt.onClient("Server:Carry:PutIntoCar", (player, vehicleID, seat) => {
-    const targetID = carrying[player.id]
+alt.onClient("Server:Carry:PutIntoCar", (player, vehicleID, seat, targetIDo) => {
+    const res = carrying[player.id] == null || carrying[player.id] == undefined;
+    const targetID = res ? targetIDo : carrying[player.id];
     if(targetID == undefined || targetID == null){return;}
     const target = alt.Player.getByID(targetID);
     if(target == undefined || targetID == null){return;}

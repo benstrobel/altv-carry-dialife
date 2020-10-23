@@ -22,53 +22,34 @@ alt.everyTick(() => {
     }
 })
 
-alt.on('keydown', (key) => {
-    if (key === "Z".charCodeAt(0)) {    // TODO 
-        if(carrying){
-            initReleaseCarried();
-        }else{
-            initCarryNearestDeadPlayer();
-        }
-        
-    }
-});
-
 // ------------------  External Functionality -------------------
 
-alt.onServer("Client:Carry:InitAction", () => {
+alt.onServer("Client:Carry:InteractDead", (nearestPlayerID) => {
     if(carrying){
         initReleaseCarried();
         return;
     }
-    const nearestPlayer = getNearestOtherPlayer(alt.Player.local, 3);
-    if(nearestPlayer == null || nearestPlayer == undefined){return;}
-    isArrested(nearestPlayer.id).then((status) => {
-        if(status){
-            initCarryNearestArrestedPlayer(nearestPlayer);
-        }else{
-            initCarryNearestDeadPlayer(nearestPlayer);
-        }
-    }, () => {}).catch(() => {})
+    const target = alt.Player.getByID(nearestPlayerID);
+    if(target == null || target == undefined){return;}
+    initCarryNearestDeadPlayer(target);
 })
 
-alt.onServer("Client:Carry:InitCarryDead", (nearestPlayer) => {
-    initCarryNearestDeadPlayer(nearestPlayer);
-})
-
-alt.onServer("Client:Carry:InitCarryArrested", (nearestPlayer) => {
-    initCarryNearestArrestedPlayer(nearestPlayer);
-})
-
-alt.onServer("Client:Carry:InitRelease", () => {
-    initReleaseCarried();
+alt.onServer("Client:Carry:InteractArrested", (nearestPlayerID) => {
+    if(carrying){
+        initReleaseCarried();
+        return;
+    }
+    const target = alt.Player.getByID(nearestPlayerID);
+    if(target == null || target == undefined){return;}
+    initCarryNearestArrestedPlayer(target);
 })
 
 alt.onServer("Client:Carry:InitPullOutOfVehicle", () => {
     initPullOutOfCar();
 })
 
-alt.onServer("Client:Carry:InitPutIntoVehicle", () => {
-    initPutIntoCar();
+alt.onServer("Client:Carry:InitPutIntoVehicle", (targetID) => {
+    initPutIntoCar(targetID == undefined ? -1 : targetID);
 })
 
 // ------------------  Internal Functionality -------------------
@@ -155,7 +136,6 @@ function doGetCarriedArrestedByPlayer(carrierID){
     if(player == null){return;}
     carried = true;
     carriedByScriptID = player.scriptID;
-    //game.attachEntityToEntity(target.scriptID, player.scriptID, game.getPedBoneIndex(player.scriptID, 11816), 0.0, 1.0, 0.0, 0, 0, 0, false, false, true, 0, false);
 }
 
 function releaseCarried(carriedID){
@@ -232,7 +212,7 @@ function initPullOutOfCar(){   // sends targetveh, targetID(not script)
     }
 }
 
-function initPutIntoCar(){ // sends targetveh, seatnr to server
+function initPutIntoCar(targetID){ // sends targetveh, seatnr to server
     if(alt.Player.local.vehicle != null && alt.Player.local.vehicle != undefined){return;}
     const vehicle = getNearestVehicle(alt.Player.local, 3);
     if(vehicle == null || vehicle.speed*3.6 > 5){return;}
@@ -240,7 +220,7 @@ function initPutIntoCar(){ // sends targetveh, seatnr to server
     for(var currentseat = maxSeat; currentseat > -1; currentseat--){
         const pedOnSeat = game.getPedInVehicleSeat(vehicle.scriptID, currentseat);
         if(!notInvalidScriptID(pedOnSeat)){
-            alt.emitServer("Server:Carry:PutIntoCar", vehicle.id, currentseat);
+            alt.emitServer("Server:Carry:PutIntoCar", vehicle.id, currentseat, targetID);
             return;
         }
     }
@@ -309,14 +289,4 @@ function distance(vector0, vector1){
 
 function difference(number0, number1){
     return number0 > number1 ? Math.abs(number0-number1) : Math.abs(number1-number0);
-}
-
-async function isArrested(targetId){
-    alt.emitServer("Server:Restrain:IsRestrained", targetId);
-
-    return promise = new Promise((res, rej) => {
-        alt.onServer("Client:Restrain:IsRestrained", (status) => {
-            res(status);
-        });
-    });
 }
