@@ -85,7 +85,7 @@ alt.onServer("Client:Carry:InitPutIntoVehicle", (targetID) => {
 })
 
 alt.onServer("Client:Carry:Release", () => {
-    initReleaseCarried();
+    initReleaseMe();
 })
 
 // ------------------  Internal Functionality -------------------
@@ -138,8 +138,12 @@ function initCarryNearestArrestedPlayer(nearestPlayer){
     alt.emitServer("Server:Carry:CarryPlayer:Arrested", nearestPlayer.id);
 }
 
-function initReleaseCarried(){
+function initReleaseMe(){
     alt.emitServer("Server:Carry:ReleaseMe");
+}
+
+function initReleaseCarried(){
+    alt.emitServer("Server:Carry:ReleasePlayer");
 }
 
 function doCarryNearestDeadPlayer(playerID, targetID){

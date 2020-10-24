@@ -14,7 +14,7 @@ alt.onClient("Server:Carry:ReleasePlayer", (player) => {
     releasePlayer(player);
 })
 
-alt.onCLient("Server:Carry:ReleaseMe", (player) => {
+alt.onClient("Server:Carry:ReleaseMe", (player) => {
     if(getValuesOfDict(carrying).indexOf(player.id) != -1){
         const carrierID = getKeyByValue(carrying, player.id);
         releasePlayer(alt.Player.getByID(carrierID));
