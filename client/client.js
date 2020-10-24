@@ -9,6 +9,38 @@ var carriedByScriptID = null;
 var carrying = false;
 
 alt.everyTick(() => {
+    if(carrying){
+        game.disableControlAction(0,140,true);
+        game.disableControlAction(0,263,true);
+        game.disableControlAction(0,264,true);
+        game.disableControlAction(0,141,true);
+        game.disableControlAction(0,142,true);
+        game.disableControlAction(0,12,true);   //weaponwheel
+        game.disableControlAction(0,13,true);   //weaponwheel
+        game.disableControlAction(0,14,true);   //weaponwheel
+        game.disableControlAction(0,15,true);   //weaponwheel
+        game.disableControlAction(0,16,true);   //weaponwheel
+        game.disableControlAction(0,17,true);   //weaponwheel
+        game.disableControlAction(0,24,true);   //atack
+        game.disableControlAction(0,25,true);   //aim
+        game.disableControlAction(0,37,true);   //weaponwheel
+        game.disableControlAction(0,158,true);   //weaponselect
+        game.disableControlAction(0,159,true);   //weaponselect
+        game.disableControlAction(0,160,true);   //weaponselect
+        game.disableControlAction(0,161,true);   //weaponselect
+        game.disableControlAction(0,162,true);   //weaponselect
+        game.disableControlAction(0,163,true);   //weaponselect
+        game.disableControlAction(0,164,true);   //weaponselect
+        game.disableControlAction(0,165,true);   //weaponselect
+        game.disableControlAction(0,166,true);   //weaponselect
+        game.disableControlAction(0,140,true);   //melee light
+        game.disableControlAction(0,141,true);   //melee heavy
+        game.disableControlAction(0,142,true);   //melee alternate
+        game.disableControlAction(0,143,true);   //melee block
+        game.disableControlAction(0,261,true);   //weaponselect
+        game.disableControlAction(0,262,true);   //weaponselect
+
+    }
     if(carried && carriedByScriptID == null){
         game.setEntityCollision(alt.Player.local.scriptID, false, false);
     }
@@ -52,6 +84,10 @@ alt.onServer("Client:Carry:InitPutIntoVehicle", (targetID) => {
     initPutIntoCar(targetID == undefined ? -1 : targetID);
 })
 
+alt.onServer("Client:Carry:Release", () => {
+    initReleaseCarried();
+})
+
 // ------------------  Internal Functionality -------------------
 
 alt.onServer("Client:Carry:ResetCollide", (playerid) => {
@@ -60,8 +96,8 @@ alt.onServer("Client:Carry:ResetCollide", (playerid) => {
     game.setEntityCollision(player.scriptID, true, true);
 });
 
-alt.onServer("Client:Carry:GetPulledOutOfVehicle", () => {
-    getPulledOutOfCar();
+alt.onServer("Client:Carry:GetPulledOutOfVehicle", (targetID) => {
+    getPulledOutOfCar(targetID);
 });
 
 alt.onServer("Client:Carry:GetPutIntoVehicle", (vehicleID, seat) => {
@@ -103,7 +139,7 @@ function initCarryNearestArrestedPlayer(nearestPlayer){
 }
 
 function initReleaseCarried(){
-    alt.emitServer("Server:Carry:ReleasePlayer");
+    alt.emitServer("Server:Carry:ReleaseMe");
 }
 
 function doCarryNearestDeadPlayer(playerID, targetID){
@@ -226,10 +262,14 @@ function initPutIntoCar(targetID){ // sends targetveh, seatnr to server
     }
 }
 
-function getPulledOutOfCar(){
-    if(alt.Player.local.vehicle == null){return;}
-    game.taskLeaveVehicle(alt.Player.local.scriptID, alt.Player.local.vehicle.scriptID, 16);
-    frameWorkNotificationFramework(1, 3000, "Du wurdest aus dem Fahrzeug gezogen.");
+function getPulledOutOfCar(targetID){
+    const target = alt.Player.getByID(targetID);
+    if(target == null || target == undefined){return;}
+    if(target.vehicle == null){return;}
+    game.taskLeaveVehicle(target.scriptID, target.vehicle.scriptID, 16);
+    if(target.scriptID == alt.Player.local.scriptID){
+       frameWorkNotificationFramework(1, 3000, "Du wurdest aus dem Fahrzeug gezogen."); 
+    }
 }
 
 function getPutIntoCar(vehicleID, seat){

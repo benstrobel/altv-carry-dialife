@@ -14,6 +14,14 @@ alt.onClient("Server:Carry:ReleasePlayer", (player) => {
     releasePlayer(player);
 })
 
+alt.onCLient("Server:Carry:ReleaseMe", (player) => {
+    if(getValuesOfDict(carrying).indexOf(player.id) != -1){
+        const carrierID = getKeyByValue(carrying, player.id);
+        releasePlayer(alt.Player.getByID(carrierID));
+        delete carrying[carrierID];
+    }
+})
+
 alt.onClient("Server:Carry:DistanceTooFar", (player) => {
     if(getValuesOfDict(carrying).indexOf(player.id) != -1){
         const carrierID = getKeyByValue(carrying, player.id);
@@ -56,6 +64,7 @@ function carryPlayer(player, targetID){
     alt.emitClient(player, "Client:Carry:CarryPlayer", player.id, targetID);
     alt.emitClient(target, "Client:Carry:GetCarried", player.id);
     carrying[player.id] = targetID;
+    target.setMeta("IsBeingCarried", true);
 }
 
 function carryPlayerArrested(player, targetID){
@@ -66,6 +75,7 @@ function carryPlayerArrested(player, targetID){
     alt.emitClient(player, "Client:Carry:CarryPlayerArrested", player.id, targetID);
     alt.emitClient(target, "Client:Carry:GetCarriedArrested", player.id);
     carrying[player.id] = targetID;
+    target.setMeta("IsBeingCarried", true);
 }
 
 function releasePlayer(player){
@@ -78,6 +88,7 @@ function releasePlayer(player){
     alt.emitClient(target, "Client:Carry:GetReleased");
     alt.emitClient(null, "Client:Carry:ResetCollide", targetID);
     target.pos = new alt.Vector3(target.pos.x,target.pos.y,target.pos.z+1);
+    target.deleteMeta("IsBeingCarried");
 }
 
 // ------------------------------------- Car Interactions -----------------------------------
@@ -95,7 +106,7 @@ function getKeyByValue(object, value) {
 alt.onClient("Server:Carry:PulledOutOfCar", (player, targetID) => {
     const target = alt.Player.getByID(targetID);
     if(target == null || target == undefined){return;}
-    alt.emitClient(target, "Client:Carry:GetPulledOutOfVehicle"); 
+    alt.emitClient(null, "Client:Carry:GetPulledOutOfVehicle", targetID); 
 });
 
 alt.onClient("Server:Carry:PutIntoCar", (player, vehicleID, seat, targetIDo) => {
