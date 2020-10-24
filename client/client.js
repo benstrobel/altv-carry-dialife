@@ -84,6 +84,10 @@ alt.onServer("Client:Carry:InitPutIntoVehicle", (targetID) => {
     initPutIntoCar(targetID == undefined ? -1 : targetID);
 })
 
+alt.onServer("Client:Carry:ReleaseCarried", () => {
+    initReleaseCarried();
+});
+
 alt.onServer("Client:Carry:Release", () => {
     initReleaseMe();
 })
